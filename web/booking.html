@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Appointment</title>
+    <link rel="stylesheet" href="webstyle.css">
+    <script src="linkedlist.js"></script>
+    <style>
+        .booking-card {
+            background-color: #fff;
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 450px;
+            margin: 2rem auto;
+            text-align: center;
+        }
+        .booking-card input {
+            width: 100%;
+            padding: 0.7rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        .booking-card button {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        .booking-card button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 90%;
+            max-width: 800px;
+            margin: 2rem auto;
+            border-collapse: collapse;
+            text-align: center;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background-color: #fff;
+        }
+        th, td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="services.html">Services</a>
+        <a href="doctors.html">Doctors</a>
+        <a href="booking.html">Book Appointment</a>
+        <a href="login.html">Login</a>
+    </nav>
+    <h1>HealthyLife Hospital</h1>
+    <p>Your trusted partner in quality healthcare</p>
+</header>
+
+<main class="main-content">
+    <!-- Statistics Cards -->
+    <div style="display:flex; justify-content:center; gap:2rem; margin:2rem auto; max-width:900px; flex-wrap:wrap;">
+        <div style="background:#fff; padding:1.5rem 2rem; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); text-align:center; min-width:150px;">
+            <h3 style="margin:0; color:#666; font-size:14px;">Total Patients</h3>
+            <p id="totalPatients" style="font-size:2rem; margin:0.5rem 0; color:#007BFF; font-weight:bold;">0</p>
+        </div>
+        <div style="background:#fff; padding:1.5rem 2rem; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); text-align:center; min-width:150px;">
+            <h3 style="margin:0; color:#666; font-size:14px;">Waiting</h3>
+            <p id="waitingPatients" style="font-size:2rem; margin:0.5rem 0; color:#ffc107; font-weight:bold;">0</p>
+        </div>
+        <div style="background:#fff; padding:1.5rem 2rem; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); text-align:center; min-width:150px;">
+            <h3 style="margin:0; color:#666; font-size:14px;">Served</h3>
+            <p id="servedPatients" style="font-size:2rem; margin:0.5rem 0; color:#28a745; font-weight:bold;">0</p>
+        </div>
+    </div>
+
+    <div class="booking-card">
+        <h2 style="margin-top:0;">Book Appointment</h2>
+        <p style="font-size:12px; color:#666; margin-bottom:1rem;">All bookings are added as Normal priority</p>
+        <select id="doctor" onchange="updateTimeSlots()">
+            <option value="Dr. Rajesh Kumar">Dr. Rajesh Kumar (Cardiologist)</option>
+            <option value="Dr. Priya Sharma">Dr. Priya Sharma (Neurologist)</option>
+            <option value="Dr. Amit Patel">Dr. Amit Patel (Pediatrician)</option>
+            <option value="Dr. Neha Gupta">Dr. Neha Gupta (Dermatologist)</option>
+            <option value="Dr. Vikram Singh">Dr. Vikram Singh (Orthopedic Surgeon)</option>
+            <option value="Dr. Anjali Desai">Dr. Anjali Desai (Gynecologist)</option>
+        </select>
+        <input type="text" id="patientName" placeholder="Full Name">
+        <input type="email" id="patientEmail" placeholder="Email">
+        <input type="tel" id="patientPhone" placeholder="Phone">
+        
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="appointmentDate" onchange="updateTimeSlots()" style="flex:1;">
+            <select id="appointmentTime" style="flex:1; padding:0.7rem; border-radius:6px; border:1px solid #ccc;">
+                <option value="">Select Time</option>
+            </select>
+        </div>
+        <button onclick="bookPatient()">Book Appointment</button>
+    </div>
+
+    <h2 style="text-align:center;">Current Queue</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Token</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Priority</th>
+        </tr>
+        </thead>
+        <tbody id="queueList"></tbody>
+    </table>
+</main>
+
+<footer>
+    <p>© 2026 HealthyLife Hospital. All rights reserved.</p>
+</footer>
+
+<script>
+    // Initialize LinkedList for queue management
+    const patientQueue = new LinkedList();
+    
+    function updateTimeSlots() {
+        const dateInput = document.getElementById("appointmentDate").value;
+        const doctor = document.getElementById("doctor").value;
+        const timeSelect = document.getElementById("appointmentTime");
+        const slots = [];
+        
+        // Morning Shift: 11:00 AM - 1:00 PM (13:00)
+        for (let h = 11; h < 13; h++) {
+            for (let m = 0; m < 60; m += 5) {
+                slots.push(`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`);
+            }
+        }
+        slots.push('13:00'); // Final morning slot
+        
+        // Afternoon Shift: 2:30 PM - 4:30 PM (16:30)
+        for (let h = 14; h <= 16; h++) {
+            let startMin = (h === 14) ? 30 : 0;
+            let endMin = (h === 16) ? 30 : 55;
+            for (let m = startMin; m <= endMin; m += 5) {
+                slots.push(`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`);
+            }
+        }
+
+        timeSelect.innerHTML = '<option value="">Select Time</option>';
+        if(!dateInput) return;
+
+        fetch(`get_booked_slots.php?date=${dateInput}&doctor=${encodeURIComponent(doctor)}`)
+        .then(res => res.json())
+        .then(data => {
+            const booked = data.booked || [];
+            slots.forEach(slot => {
+                const opt = document.createElement('option');
+                opt.value = slot;
+                // e.g. "11:00" -> "11:00 AM"
+                const [h, m] = slot.split(':');
+                const hour = parseInt(h);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                opt.innerText = `${displayHour}:${m} ${ampm}`;
+                
+                if (booked.includes(slot)) {
+                    opt.disabled = true;
+                    opt.innerText += ' (Booked)';
+                    opt.style.color = 'red';
+                }
+                timeSelect.appendChild(opt);
+            });
+        });
+    }
+
+    function bookPatient() {
+        const dateVal = document.getElementById("appointmentDate").value;
+        const timeVal = document.getElementById("appointmentTime").value;
+
+        const patient = {
+            name: document.getElementById("patientName").value,
+            email: document.getElementById("patientEmail").value,
+            phone: document.getElementById("patientPhone").value,
+            doctor: document.getElementById("doctor").value,
+            date: dateVal && timeVal ? `${dateVal} ${timeVal}:00` : ""
+        };
+
+        if (!patient.name || !patient.email || !patient.phone || !patient.date) {
+            return alert("Please fill all fields, including Date and Time");
+        }
+
+        // Send data to server
+        const formData = new FormData();
+        formData.append('name', patient.name);
+        formData.append('email', patient.email);
+        formData.append('phone', patient.phone);
+        formData.append('doctor', patient.doctor);
+        formData.append('date', patient.date);
+
+        fetch('add_patient.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'success') {
+                // Add data to LinkedList
+                console.log('Using LinkedList: Adding patient to end of queue (insertAtEnd operation)');
+                patientQueue.insertAtEnd(patient);
+                console.log('Current LinkedList queue:', patientQueue.traverse());
+                
+                alert('Appointment booked successfully!');
+                // Clear form
+                document.getElementById("patientName").value = "";
+                document.getElementById("patientEmail").value = "";
+                document.getElementById("patientPhone").value = "";
+                document.getElementById("appointmentDate").value = "";
+                document.getElementById("appointmentTime").innerHTML = '<option value="">Select Time</option>';
+                // Refresh queue
+                displayQueue();
+            } else {
+                alert('Error: ' + (data.message || 'Failed to book appointment'));
+            }
+        })
+        .catch(error => {
+            alert('Error booking appointment');
+            console.error(error);
+        });
+    }
+
+    function displayQueue() {
+        fetch('get_queue.php')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(patients => {
+            console.log('Fetched patients:', patients);
+            
+            patientQueue.head = null; // Reset LinkedList
+            patients.forEach(p => {
+                patientQueue.insertAtEnd(p); 
+            });
+            
+            // Get patients from traverse method
+            const queuePatients = patientQueue.traverse();
+            console.log('LinkedList Queue (traverse):', queuePatients);
+            
+            const table = document.getElementById("queueList");
+            table.innerHTML = "";
+            
+            if (!queuePatients || queuePatients.length === 0) {
+                const row = table.insertRow();
+                const cell = row.insertCell(0);
+                cell.colSpan = 4;
+                cell.innerText = "No appointments in queue";
+                cell.style.textAlign = "center";
+                
+                // Update stats to 0
+                document.getElementById('totalPatients').innerText = '0';
+                document.getElementById('waitingPatients').innerText = '0';
+                return;
+            }
+            
+            let waitingCount = 0;
+            
+            queuePatients.forEach((p, index) => {
+                // set badge color
+                let priorityColor = '#28a745'; 
+                if(p.priority === 'vip') priorityColor = '#ffc107'; 
+                if(p.priority === 'emergency') priorityColor = '#dc3545'; 
+                
+                const row = table.insertRow();
+                row.insertCell(0).innerText = p.queue_position || (index + 1);
+                row.insertCell(1).innerText = p.name || 'N/A';
+                row.insertCell(2).innerHTML = (p.date || 'N/A') + '<br><small style="color:#666;">' + (p.doctor || 'Any') + '</small>';
+                
+                const priorityCell = row.insertCell(3);
+                priorityCell.innerHTML = `<span style="background:${priorityColor};color:white;padding:3px 8px;border-radius:3px;font-size:12px;">${p.priority?.toUpperCase() || 'NORMAL'}</span>`;
+                
+                if(p.status === 'waiting') waitingCount++;
+            });
+            
+            // Update 
+            document.getElementById('totalPatients').innerText = patients.length;
+            document.getElementById('waitingPatients').innerText = waitingCount;
+            
+            // Fetch served count
+            fetch('get_served_count.php')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('servedPatients').innerText = data.count || 0;
+            })
+            .catch(error => console.error('Error fetching served count:', error));
+        })
+        .catch(error => {
+            console.error('Error fetching queue:', error);
+            const table = document.getElementById("queueList");
+            table.innerHTML = "";
+            const row = table.insertRow();
+            const cell = row.insertCell(0);
+            cell.colSpan = 4;
+            cell.innerText = "Error loading appointments. Please check console.";
+            cell.style.textAlign = "center";
+            cell.style.color = "red";
+        });
+    }
+
+    // page load
+    displayQueue();
+    // Pre-select doctor if in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const docParam = urlParams.get('doctor');
+    if(docParam) {
+        document.getElementById('doctor').value = docParam;
+    }
+
+    // live update
+    setInterval(() => displayQueue(), 2000);
+</script>
+
+</body>
+</html>
