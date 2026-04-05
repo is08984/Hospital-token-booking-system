@@ -15,6 +15,7 @@ CREATE TABLE patients (
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL,
     date DATETIME NOT NULL,
+    doctor VARCHAR(100) NOT NULL DEFAULT 'Dr. Rajesh Kumar',
     priority VARCHAR(20) DEFAULT 'normal',
     status VARCHAR(20) DEFAULT 'waiting',
     queue_position INT DEFAULT 999,
