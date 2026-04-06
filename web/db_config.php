@@ -1,8 +1,8 @@
 <?php
 // Database configuration
 define('DB_HOST', 'localhost');
-define('DB_USER', 'webuserh');
-define('DB_PASS', '1234');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 define('DB_NAME', 'hospital');
 
 // Create database connection
